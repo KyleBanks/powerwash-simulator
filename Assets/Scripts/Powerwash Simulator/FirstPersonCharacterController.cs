@@ -94,28 +94,29 @@ public class FirstPersonCharacterController : MonoBehaviour
 
 	private void UpdateManualRotation()
 	{
-		// Prevent camera jerkiness if there are any sudden frame spikes
-		const int smoothOverFrames = 30;
-		this._cameraInputSmoothing.Enqueue(Mathf.Min(smoothOverFrames / 1f, Time.deltaTime));
-		while (this._cameraInputSmoothing.Count > smoothOverFrames)
-			this._cameraInputSmoothing.Dequeue();
-
+		// // Prevent camera jerkiness if there are any sudden frame spikes
+		// const int smoothOverFrames = 30;
+		// this._cameraInputSmoothing.Enqueue(Mathf.Min(smoothOverFrames / 1f, Time.deltaTime));
+		// while (this._cameraInputSmoothing.Count > smoothOverFrames)
+		// 	this._cameraInputSmoothing.Dequeue();
+		//
 		Vector2 lookInput = Input.mousePositionDelta;
 		if (Mathf.Approximately(lookInput.sqrMagnitude, 0))
 			return;
-		
-		// get the average (smoothed) delta time in the queue
-		float deltaTime = 0;
-		for (int i = 0; i < this._cameraInputSmoothing.Count; i++)
-		{
-			// cannot access queue elements by index, so pop each item off the queue and add it to the back
-			// until we loop back around to the beginning and end up with the same queue we started with
-			float val = this._cameraInputSmoothing.Dequeue();
-			deltaTime += val;
-			this._cameraInputSmoothing.Enqueue(val);
-		}
-		if (this._cameraInputSmoothing.Count > 0)
-			deltaTime /= this._cameraInputSmoothing.Count;
+		//
+		// // get the average (smoothed) delta time in the queue
+		// float deltaTime = 0;
+		// for (int i = 0; i < this._cameraInputSmoothing.Count; i++)
+		// {
+		// 	// cannot access queue elements by index, so pop each item off the queue and add it to the back
+		// 	// until we loop back around to the beginning and end up with the same queue we started with
+		// 	float val = this._cameraInputSmoothing.Dequeue();
+		// 	deltaTime += val;
+		// 	this._cameraInputSmoothing.Enqueue(val);
+		// }
+		// if (this._cameraInputSmoothing.Count > 0)
+		// 	deltaTime /= this._cameraInputSmoothing.Count;
+		float deltaTime = Time.deltaTime;
 		
 		float pitchInput = lookInput.y;
 		float yawInput = lookInput.x;
