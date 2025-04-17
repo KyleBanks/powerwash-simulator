@@ -36,6 +36,8 @@ Shader "Custom/Paint"
             #pragma target 2.0
             #pragma vertex vert
             #pragma fragment frag
+
+            #pragma multi_compile_local_fragment _ FLOOD_COLOR
             
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             
@@ -73,6 +75,10 @@ Shader "Custom/Paint"
             
             float4 frag(Varyings i) : SV_Target0
             {
+            #ifdef FLOOD_COLOR
+                return float4(_PaintColor.rgb, 1);
+            #endif
+                
                 float dist = distance(i.positionWS, _PaintPositionWS);
                 float positionStrength = 1 - saturate(dist / _SpreadRadius);
                 float facingStrength = dot(i.normalWS, _PaintNormalWS) > 0 ? 1 : 0;

@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 public class PaintableSurface : MonoBehaviour
 {
     private static readonly List<Material> MATERIAL_CACHE = new();
-    private static readonly float[] COVERAGE_RESULT_BUFFER = new float[1];
+    private static readonly Vector2[] COVERAGE_RESULT_BUFFER = new Vector2[1];
     
     private static readonly int SHADER_PARAM_PAINT_POSITION_WS = Shader.PropertyToID("_PaintPositionWS");
     private static readonly int SHADER_PARAM_PAINT_NORMAL_WS = Shader.PropertyToID("_PaintNormalWS");
@@ -32,9 +32,10 @@ public class PaintableSurface : MonoBehaviour
         XXL = XL * 2,
     }
 
-    public event Action<float> OnDirtinessChanged;
+    public event Action<PaintableSurface> OnDirtinessChanged;
 
     public float Dirtiness { get; private set; } = 1;
+    public float Cleanliness { get; private set; } = 0;
     
     public TextureSizes TextureSize = TextureSizes.L;
     public Shader PaintShader;
@@ -47,7 +48,8 @@ public class PaintableSurface : MonoBehaviour
     private RenderTexture _rt;
     private CommandBuffer _cmd;
     private readonly Dictionary<Material, Material> _materials = new();
-    private Material _paintMaterial;
+    private Material _paintMaterial;    
+    private LocalKeyword _floorColorKeyword;
     private int _coverageKernel;
     private int _coverageGroups;
     private uint _coverageThreadGroupSize;
@@ -97,18 +99,31 @@ public class PaintableSurface : MonoBehaviour
     }
 #endif
     
-    internal void Paint(Vector3 position, Vector3 normal, float radius, Color color)
+    internal void Paint(
+        Vector3 position,
+        Vector3 normal,
+        float radius, 
+        Color color
+    )
     {
         this.Setup();
+        this._paintMaterial.SetKeyword(this._floorColorKeyword, false);
         this._paintMaterial.SetVector(SHADER_PARAM_PAINT_POSITION_WS, position);
         this._paintMaterial.SetVector(SHADER_PARAM_PAINT_NORMAL_WS, normal);
         this._paintMaterial.SetFloat(SHADER_PARAM_SPREAD_RADIUS, radius);
         this._paintMaterial.SetColor(SHADER_PARAM_PAINT_COLOR, color);
         Graphics.ExecuteCommandBuffer(this._cmd);
-        
         this.MeasureCoverage();
     }
 
+    private void FloodColor(Color color)
+    {
+        this._paintMaterial.SetKeyword(this._floorColorKeyword, true);
+        this._paintMaterial.SetColor(SHADER_PARAM_PAINT_COLOR, color);
+        Graphics.ExecuteCommandBuffer(this._cmd);
+    }
+
+    [ContextMenu("Setup")]
     private void Setup()
     {
         if (this._hasSetup)
@@ -124,17 +139,18 @@ public class PaintableSurface : MonoBehaviour
         this._hasSetup = true;
 
         this._paintMaterial = new Material(this.PaintShader);
+        this._floorColorKeyword = new LocalKeyword(this._paintMaterial.shader, "FLOOD_COLOR");
 
         this._rt = new RenderTexture((int) this.TextureSize, (int) this.TextureSize, 0, RenderTextureFormat.ARGB32)
         {
-            enableRandomWrite = true
+            enableRandomWrite = true,
+            wrapMode = TextureWrapMode.Clamp
         };
         this._rt.Create();
         
-        // initialise the texture to white (full dirtiness)
         RenderTexture temp = RenderTexture.active;
         RenderTexture.active = this._rt;
-        GL.Clear(true, true, Color.white);
+        GL.Clear(true, true, new Color(1, 1, 1, 0));
         RenderTexture.active = temp;
 
         int mainRendererMaterialCount = this.SetupRenderer(this._mainRenderer);
@@ -156,8 +172,10 @@ public class PaintableSurface : MonoBehaviour
         // TODO: need break this up into batches for large textures while avoiding exceeding the max group size
         this._coverageGroups = Mathf.Min(this._coverageGroups, 65535);
 
-        this._coverageBuffers[0] = new ComputeBuffer(this._coverageGroups, sizeof(float));
-        this._coverageBuffers[1] = new ComputeBuffer(this._coverageGroups, sizeof(float)); // reused for each pass
+        this._coverageBuffers[0] = new ComputeBuffer(this._coverageGroups, sizeof(float) * 2);
+        this._coverageBuffers[1] = new ComputeBuffer(this._coverageGroups, sizeof(float) * 2); 
+        
+        this.FloodColor(Color.white);
     }
 
     private int SetupRenderer(Renderer rend)
@@ -210,9 +228,18 @@ public class PaintableSurface : MonoBehaviour
         ComputeBuffer final = this._coverageBuffers[bufferToggle ? 1 : 0];
         final.GetData(COVERAGE_RESULT_BUFFER);
 
+        // Calculate dirtiness
+        Vector2 output = COVERAGE_RESULT_BUFFER[0];
+        float sumDirtiness = output.x;
+        float validPixelCount = output.y;
+        this.Dirtiness = Mathf.Clamp01(sumDirtiness / validPixelCount);
+        // add a bit of leeway
+        if (this.Dirtiness < 0.02f)
+            this.Dirtiness = 0f;
+        this.Cleanliness = 1 - this.Dirtiness;
+
         // Notify
-        this.Dirtiness = Mathf.Clamp01(COVERAGE_RESULT_BUFFER[0] / (this._rt.width * this._rt.height));
-        this.OnDirtinessChanged?.Invoke(this.Dirtiness);
+        this.OnDirtinessChanged?.Invoke(this);
     }
 
 }

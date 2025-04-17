@@ -204,7 +204,7 @@ ModelImporter:
     secondaryUVMarginMethod: 0
     secondaryUVMinLightmapResolution: 40
     secondaryUVMinObjectScale: 1
-    secondaryUVPackMargin: 4
+    secondaryUVPackMargin: 16
     useFileScale: 1
     strictVertexDataChecks: 0
   tangentSpace:

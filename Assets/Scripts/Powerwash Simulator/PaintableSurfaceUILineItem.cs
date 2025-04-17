@@ -32,17 +32,16 @@ public class PaintableSurfaceUILineItem : MonoBehaviour
 
     public void Bind(PaintableSurface surface)
     {
-        this.UpdateDisplay(surface.Dirtiness);
+        this.UpdateDisplay(surface);
         this._nameLabel.text = surface.gameObject.name;
         this._nameLabel.color = this._progressLabel.color = this._defaultTextColor;
         surface.OnDirtinessChanged += this.UpdateDisplay;
     }
 
-    private void UpdateDisplay(float dirtiness)
+    private void UpdateDisplay(PaintableSurface surface)
     {
-        float cleanliness = 1 - dirtiness;
-        this._progressLabel.text = (cleanliness * 100).ToString("0.0") + "%";
-        this._progressSlider.value = cleanliness;
+        this._progressLabel.text = (surface.Cleanliness * 100).ToString("0.0") + "%";
+        this._progressSlider.value = surface.Cleanliness;
         this._nameLabel.color = this._progressLabel.color = Color.green;
     }
 }
