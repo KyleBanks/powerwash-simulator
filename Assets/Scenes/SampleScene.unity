@@ -688,8 +688,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6cee5641c0960d4ea656fa26492c87e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Color: {r: 0, g: 0, b: 0, a: 1}
-  SpreadRadius: 0.2
+  SpreadRadius: 0.5
   Range: 10
   LayerMask:
     serializedVersion: 2
@@ -733,7 +732,7 @@ CharacterController:
   serializedVersion: 3
   m_Height: 1
   m_Radius: 0.5
-  m_SlopeLimit: 45
+  m_SlopeLimit: 85
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
@@ -1423,7 +1422,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d0f53252c438764c86b480b0943ef41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TextureSize: 2048
+  TextureSize: 1024
   PaintShader: {fileID: 4800000, guid: 2af9285e58544f2e913527d23cb8c646, type: 3}
   CoverageShader: {fileID: 7200000, guid: b2c00ca7c3934c6ea37e9a11d204fb26, type: 3}
   _transform: {fileID: 874326134}
@@ -2005,7 +2004,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d0f53252c438764c86b480b0943ef41, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TextureSize: 2048
+  TextureSize: 1024
   PaintShader: {fileID: 4800000, guid: 2af9285e58544f2e913527d23cb8c646, type: 3}
   CoverageShader: {fileID: 7200000, guid: b2c00ca7c3934c6ea37e9a11d204fb26, type: 3}
   _transform: {fileID: 1925760825}
