@@ -1,0 +1,46 @@
+#pragma kernel Reduce
+
+#pragma multi_compile_local _ TEXTURE_MODE
+
+#ifdef TEXTURE_MODE
+    Texture2D<float4> InputTexture;
+#else
+    StructuredBuffer<float> InputBuffer;
+#endif
+
+RWStructuredBuffer<float> OutputBuffer;
+
+#define GROUP_SIZE 1024
+groupshared float temp[GROUP_SIZE];
+
+[numthreads(GROUP_SIZE, 1, 1)] 
+void Reduce(uint3 id : SV_DispatchThreadID, uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
+{
+    uint idx = id.x;
+    float val = 0.0f;
+#if TEXTURE_MODE
+    uint width, height;
+    InputTexture.GetDimensions(width, height);
+    if (idx < width * height)
+    {
+        uint2 uv = uint2(idx % width, idx / width);
+        val = InputTexture[uv].r;
+    }
+#else
+    if (idx < InputBuffer.Length)
+        val = InputBuffer[idx];
+#endif
+    
+    temp[groupThreadID.x] = val;
+    GroupMemoryBarrierWithGroupSync();
+
+    for (uint s = GROUP_SIZE / 2; s > 0; s >>= 1)
+    {
+        if (groupThreadID.x < s)
+            temp[groupThreadID.x] += temp[groupThreadID.x + s];
+        GroupMemoryBarrierWithGroupSync();
+    }
+
+    if (groupThreadID.x == 0)
+        OutputBuffer[groupID.x] = temp[0];
+}

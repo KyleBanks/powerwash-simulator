@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7d0f53252c438764c86b480b0943ef41
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - PaintShader: {fileID: 4800000, guid: 2af9285e58544f2e913527d23cb8c646, type: 3}
+  - _transform: {instanceID: 0}
+  - _mainRenderer: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
